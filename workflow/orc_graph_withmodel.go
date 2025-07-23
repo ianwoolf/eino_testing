@@ -1,4 +1,4 @@
-package stage9
+package workflow
 
 import (
 	"context"
@@ -6,22 +6,13 @@ import (
 	"os"
 
 	"github.com/cloudwego/eino-ext/components/model/ark"
-	"github.com/cloudwego/eino/callbacks"
 	"github.com/cloudwego/eino/compose"
 	"github.com/cloudwego/eino/schema"
 )
 
-func OrcGraphWithCallback(ctx context.Context, input map[string]string) {
-	g := compose.NewGraph[map[string]string, *schema.Message](
-		compose.WithGenLocalState(genFunc),
-	)
+func OrcGraphWithModel(ctx context.Context, input map[string]string) {
+	g := compose.NewGraph[map[string]string, *schema.Message]()
 	lambda := compose.InvokableLambda(func(ctx context.Context, input map[string]string) (output map[string]string, err error) {
-		//在节点内部处理state
-		_ = compose.ProcessState[*State](ctx, func(_ context.Context, state *State) error {
-			state.History["tsundere_action"] = "我喜欢你"
-			state.History["cute_action"] = "摸摸头"
-			return nil
-		})
 		if input["role"] == "tsundere" {
 			return map[string]string{"role": "tsundere", "content": input["content"]}, nil
 		}
@@ -31,10 +22,6 @@ func OrcGraphWithCallback(ctx context.Context, input map[string]string) {
 		return map[string]string{"role": "user", "content": input["content"]}, nil
 	})
 	TsundereLambda := compose.InvokableLambda(func(ctx context.Context, input map[string]string) (output []*schema.Message, err error) {
-		_ = compose.ProcessState[*State](ctx, func(_ context.Context, state *State) error {
-			input["content"] = input["content"] + state.History["tsundere_action"].(string)
-			return nil
-		})
 		return []*schema.Message{
 			{
 				Role:    schema.System,
@@ -46,12 +33,7 @@ func OrcGraphWithCallback(ctx context.Context, input map[string]string) {
 			},
 		}, nil
 	})
-
 	CuteLambda := compose.InvokableLambda(func(ctx context.Context, input map[string]string) (output []*schema.Message, err error) {
-		// _ = compose.ProcessState[*State](ctx, func(_ context.Context, state *State) error {
-		// 	input["content"] = input["content"] + state.History["action"].(string)
-		// 	return nil
-		// })
 		return []*schema.Message{
 			{
 				Role:    schema.System,
@@ -63,11 +45,6 @@ func OrcGraphWithCallback(ctx context.Context, input map[string]string) {
 			},
 		}, nil
 	})
-
-	cutePreHandler := func(ctx context.Context, input map[string]string, state *State) (map[string]string, error) {
-		input["content"] = input["content"] + state.History["cute_action"].(string)
-		return input, nil
-	}
 
 	model, err := ark.NewChatModel(ctx, &ark.ChatModelConfig{
 		APIKey:  os.Getenv("ARK_API_KEY"),
@@ -86,7 +63,7 @@ func OrcGraphWithCallback(ctx context.Context, input map[string]string) {
 	if err != nil {
 		panic(err)
 	}
-	err = g.AddLambdaNode("cute", CuteLambda, compose.WithStatePreHandler(cutePreHandler))
+	err = g.AddLambdaNode("cute", CuteLambda)
 	if err != nil {
 		panic(err)
 	}
@@ -128,20 +105,9 @@ func OrcGraphWithCallback(ctx context.Context, input map[string]string) {
 		panic(err)
 	}
 	//执行
-	answer, err := r.Invoke(ctx, input, compose.WithCallbacks(genCallback()))
+	answer, err := r.Invoke(ctx, input)
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println(answer.Content)
-}
-
-func genCallback() callbacks.Handler {
-	handler := callbacks.NewHandlerBuilder().OnStartFn(func(ctx context.Context, info *callbacks.RunInfo, input callbacks.CallbackInput) context.Context {
-		fmt.Printf("当前%s节点输入:%s\n", info.Component, input)
-		return ctx
-	}).OnEndFn(func(ctx context.Context, info *callbacks.RunInfo, output callbacks.CallbackOutput) context.Context {
-		fmt.Printf("当前%s节点输出:%s\n", info.Component, output)
-		return ctx
-	}).Build()
-	return handler
 }

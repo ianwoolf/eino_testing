@@ -1,4 +1,4 @@
-package stage6
+package text_processing
 
 import (
 	"context"

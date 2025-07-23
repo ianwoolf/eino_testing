@@ -1,4 +1,4 @@
-package stage2
+package chat
 
 import (
 	"context"
