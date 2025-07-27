@@ -17,8 +17,8 @@
 package main
 
 import (
-	"AwesomeEino/stage10"
 	"context"
+	"eino_testing/ongoing"
 	"log"
 	"os"
 	"os/signal"
@@ -38,7 +38,7 @@ func main() {
 	}
 
 	// Register chain, graph and state_graph for demo use
-	_, err = stage10.Buildtest(ctx)
+	_, err = ongoing.Buildtest(ctx)
 	if err != nil {
 		log.Printf("[eino dev] build test failed, err=%v", err)
 		return

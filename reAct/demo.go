@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
+	"os"
 	"time"
 
 	"github.com/cloudwego/eino-ext/components/model/ark"
@@ -15,18 +17,23 @@ import (
 	"github.com/cloudwego/eino/flow/agent"
 	"github.com/cloudwego/eino/flow/agent/react"
 	"github.com/cloudwego/eino/schema"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	startTime := time.Now()
 	fmt.Printf("程序开始执行时间: %s\n", startTime.Format("2006-01-02 15:04:05.000"))
 
-	arkAPIKey := "56a6b406-8b6b-4bb5-b169-92117a5caa72"
-	arkModelName := "doubao-1-5-pro-32k-250115"
 	ctx := context.Background()
 	arkModel, err := ark.NewChatModel(ctx, &ark.ChatModelConfig{
-		APIKey: arkAPIKey,
-		Model:  arkModelName,
+		BaseURL: os.Getenv("API_URL"),
+		APIKey:  os.Getenv("ARK_API_KEY"),
+		Model:   os.Getenv("MODEL"),
 	})
 	if err != nil {
 		fmt.Printf("failed to create chat model: %v", err)
@@ -34,7 +41,7 @@ func main() {
 	}
 	addtool := GetAddTool()
 	subtool := GetSubTool()
-	analyzetool:=GetAnalyzeTool()
+	analyzetool := GetAnalyzeTool()
 	persona := `#Character:
 	你是一个幼儿园老师，会同时判断题目难易程度，给出问题的答案
 	`
@@ -71,7 +78,7 @@ func main() {
 	raAgent, err := react.NewAgent(ctx, &react.AgentConfig{
 		ToolCallingModel: arkModel,
 		ToolsConfig: compose.ToolsNodeConfig{
-			Tools: []tool.BaseTool{addtool,subtool,analyzetool},
+			Tools:               []tool.BaseTool{addtool, subtool, analyzetool},
 			ExecuteSequentially: false,
 		},
 		StreamToolCallChecker: toolCallChecker,
@@ -81,7 +88,7 @@ func main() {
 		return
 	}
 	//构建输入模板schema
-	chatmsg:=[]*schema.Message{
+	chatmsg := []*schema.Message{
 		{
 			Role:    schema.System,
 			Content: persona,
@@ -93,7 +100,7 @@ func main() {
 	}
 	//流式调用
 	//添加了loggerCallback的回调函数
-	sr, err := raAgent.Stream(ctx, chatmsg,agent.WithComposeOptions(compose.WithCallbacks(&loggerCallback{})))
+	sr, err := raAgent.Stream(ctx, chatmsg, agent.WithComposeOptions(compose.WithCallbacks(&loggerCallback{})))
 	if err != nil {
 		fmt.Printf("failed to stream: %v", err)
 		return
@@ -118,7 +125,7 @@ func main() {
 	fmt.Printf("%s", finalContent)
 	fmt.Printf("\n\n===== finished =====\n")
 
-		// 计算并打印运行时间
+	// 计算并打印运行时间
 	endTime := time.Now()
 	duration := endTime.Sub(startTime)
 	fmt.Printf("\n程序结束执行时间: %s\n", endTime.Format("2006-01-02 15:04:05.000"))

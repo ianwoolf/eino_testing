@@ -18,6 +18,7 @@ func ChatStream() {
 	model, err := ark.NewChatModel(ctx, &ark.ChatModelConfig{
 		APIKey:  os.Getenv("ARK_API_KEY"),
 		Model:   "doubao-1.5-pro-32k-250115",
+		BaseURL: os.Getenv("API_URL"),
 		Timeout: &timeout,
 	})
 	if err != nil {

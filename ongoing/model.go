@@ -12,8 +12,9 @@ import (
 func newChatModel(ctx context.Context) (cm model.BaseChatModel, err error) {
 	// TODO Modify component configuration here.
 	config := &ark.ChatModelConfig{
-		Model:  os.Getenv("MODEL"),
-		APIKey: os.Getenv("ARK_API_KEY"),
+		Model:   os.Getenv("MODEL"),
+		APIKey:  os.Getenv("ARK_API_KEY"),
+		BaseURL: os.Getenv("API_URL"),
 	}
 	cm, err = ark.NewChatModel(ctx, config)
 	if err != nil {

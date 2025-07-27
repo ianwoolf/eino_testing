@@ -1,4 +1,4 @@
-module AwesomeEino
+module eino_testing
 
 go 1.24.3
 
