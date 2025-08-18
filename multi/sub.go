@@ -1,47 +1,63 @@
-package main
+package multi
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/cloudwego/eino-ext/components/model/ark"
 	"github.com/cloudwego/eino/components/tool"
-	"github.com/cloudwego/eino/compose"
-	"github.com/cloudwego/eino/flow/agent"
 	"github.com/cloudwego/eino/flow/agent/multiagent/host"
-	"github.com/cloudwego/eino/flow/agent/react"
 	"github.com/cloudwego/eino/schema"
 )
 
-func newSubSpecialist(ctx context.Context) (*host.Specialist, error) {
-	arkAPIKey := "56a6b406-8b6b-4bb5-b169-92117a5caa72"
-	arkModelName := "doubao-1-5-pro-32k-250115"
-	chatModel, err := ark.NewChatModel(ctx, &ark.ChatModelConfig{
-		APIKey: arkAPIKey,
-		Model:  arkModelName,
-	})
-	if err != nil {
-		fmt.Printf("failed to create chat model: %v", err)
-		return nil,err
+func NewSubSpecialist(ctx context.Context, cmConfig *ark.ChatModelConfig) (*host.Specialist, error) {
+	agentMeta := host.AgentMeta{
+		Name:        "sub_specialist",
+		IntendedUse: "sub two numbers and return the result. cannot analysis the difficulty of the problem, only sub first number from second number.",
 	}
-	subtool:=GetSubTool()
-	raAgent, err := react.NewAgent(ctx, &react.AgentConfig{
-		ToolCallingModel: chatModel,
-		ToolsConfig: compose.ToolsNodeConfig{
-			Tools: []tool.BaseTool{subtool},
-		},
-	})
-	if err!= nil {
-		return nil, err
-	}
-	return &host.Specialist{
-		AgentMeta: host.AgentMeta{
-			Name:        "sub_specialist",
-			IntendedUse: "sub two numbers and return the result",
-		},
-		Invokable: func(ctx context.Context, input []*schema.Message, opts ...agent.AgentOption) (*schema.Message, error) {
-			return raAgent.Generate(ctx, input, opts...)
-		},
+	invokeableTool := newSubTool()
+	return NewSpecialist(ctx, cmConfig, agentMeta, invokeableTool)
+}
+
+type SubTool struct {
+}
+
+func newSubTool() tool.InvokableTool {
+	return &SubTool{}
+}
+
+type SubParam struct {
+	A int `json:"a"`
+	B int `json:"b"`
+}
+
+func (t *SubTool) Info(ctx context.Context) (*schema.ToolInfo, error) {
+	return &schema.ToolInfo{
+		Name: "sub",
+		Desc: "sub two numbers",
+		ParamsOneOf: schema.NewParamsOneOfByParams(map[string]*schema.ParameterInfo{
+			"a": {
+				Type:     "number",
+				Desc:     "first number",
+				Required: true,
+			},
+			"b": {
+				Type:     "number",
+				Desc:     "second number",
+				Required: true,
+			},
+		}),
 	}, nil
-	
+}
+
+func (t *SubTool) InvokableRun(ctx context.Context, argumentsInJSON string, opts ...tool.Option) (string, error) {
+	fmt.Println("SubTool.InvokableRun...")
+	p := &SubParam{}
+	err := json.Unmarshal([]byte(argumentsInJSON), p)
+	if err != nil {
+		return "", err
+	}
+	fmt.Printf("[SubTool.InvokableRun] %+v, %d\n", p, p.A-p.B)
+	return fmt.Sprintf("%d", p.A-p.B), nil
 }

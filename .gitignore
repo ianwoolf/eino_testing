@@ -3,3 +3,4 @@ rag/milvus/volumes
 /.idea
 .vercel
 reAct/reAct
+.DS_Store

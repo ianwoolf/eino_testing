@@ -1,46 +1,63 @@
-package main
+package multi
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/cloudwego/eino-ext/components/model/ark"
 	"github.com/cloudwego/eino/components/tool"
-	"github.com/cloudwego/eino/compose"
-	"github.com/cloudwego/eino/flow/agent"
 	"github.com/cloudwego/eino/flow/agent/multiagent/host"
-	"github.com/cloudwego/eino/flow/agent/react"
 	"github.com/cloudwego/eino/schema"
 )
 
-func newAddSpecialist(ctx context.Context) (*host.Specialist, error) {
-	arkAPIKey := "56a6b406-8b6b-4bb5-b169-92117a5caa72"
-	arkModelName := "doubao-1-5-pro-32k-250115"
-	chatModel, err := ark.NewChatModel(ctx, &ark.ChatModelConfig{
-		APIKey: arkAPIKey,
-		Model:  arkModelName,
-	})
-	if err != nil {
-		fmt.Printf("failed to create chat model: %v", err)
-		return nil,err
+func NewAddSpecialist(ctx context.Context, cmConfig *ark.ChatModelConfig) (*host.Specialist, error) {
+	agentMeta := host.AgentMeta{
+		Name:        "add_specialist",
+		IntendedUse: "add two numbers and return the result. cannot analysis the difficulty of the problem, only add the numbers.",
 	}
-	addtool:=GetAddTool()
-	raAgent, err := react.NewAgent(ctx, &react.AgentConfig{
-		ToolCallingModel: chatModel,
-		ToolsConfig: compose.ToolsNodeConfig{
-			Tools: []tool.BaseTool{addtool},
-		},
-	})
-	if err!= nil {
-		return nil, err
-	}
-	return &host.Specialist{
-		AgentMeta: host.AgentMeta{
-			Name:        "add_specialist",
-			IntendedUse: "add two numbers and return the result",
-		},
-		Invokable: func(ctx context.Context, input []*schema.Message, opts ...agent.AgentOption) (*schema.Message, error) {
-			return raAgent.Generate(ctx, input, opts...)
-		},
+	invokeableTool := newAddTool()
+	return NewSpecialist(ctx, cmConfig, agentMeta, invokeableTool)
+}
+
+type AddTool struct {
+}
+
+func newAddTool() tool.InvokableTool {
+	return &AddTool{}
+}
+
+type AddParam struct {
+	A int `json:"a"`
+	B int `json:"b"`
+}
+
+func (t *AddTool) Info(ctx context.Context) (*schema.ToolInfo, error) {
+	return &schema.ToolInfo{
+		Name: "add",
+		Desc: "add two numbers",
+		ParamsOneOf: schema.NewParamsOneOfByParams(map[string]*schema.ParameterInfo{
+			"a": {
+				Type:     "number",
+				Desc:     "first number",
+				Required: true,
+			},
+			"b": {
+				Type:     "number",
+				Desc:     "second number",
+				Required: true,
+			},
+		}),
 	}, nil
+}
+
+func (t *AddTool) InvokableRun(ctx context.Context, argumentsInJSON string, opts ...tool.Option) (string, error) {
+	fmt.Println("AddTool.InvokableRun...")
+	p := &AddParam{}
+	err := json.Unmarshal([]byte(argumentsInJSON), p)
+	if err != nil {
+		return "", err
+	}
+	fmt.Printf("[AddTool.InvokableRun] %+v, %d\n", p, p.A+p.B)
+	return fmt.Sprintf("%d", p.A+p.B), nil
 }
