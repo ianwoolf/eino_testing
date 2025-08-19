@@ -1,4 +1,4 @@
-package multi
+package multi_agent
 
 import (
 	"context"

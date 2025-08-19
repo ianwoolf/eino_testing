@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	"eino_testing/multi"
+	"eino_testing/multi_agent"
 
 	"github.com/cloudwego/eino-ext/components/model/ark"
 	"github.com/cloudwego/eino/flow/agent/multiagent/host"
@@ -38,19 +38,19 @@ func main() {
 	fmt.Printf("程序开始执行时间: %s\n", startTime.Format("2006-01-02 15:04:05.000"))
 
 	ctx := context.Background()
-	h, err := multi.NewHost(ctx, cmConfig)
+	h, err := multi_agent.NewHost(ctx, cmConfig)
 	if err != nil {
 		panic(err)
 	}
-	adder, err := multi.NewAddSpecialist(ctx, cmConfig)
+	adder, err := multi_agent.NewAddSpecialist(ctx, cmConfig)
 	if err != nil {
 		panic(err)
 	}
-	suber, err := multi.NewSubSpecialist(ctx, cmConfig)
+	suber, err := multi_agent.NewSubSpecialist(ctx, cmConfig)
 	if err != nil {
 		panic(err)
 	}
-	analyser, err := multi.NewAnalyzeSpecialist(ctx, cmConfig, cmConfig)
+	analyser, err := multi_agent.NewAnalyzeSpecialist(ctx, cmConfig, cmConfig)
 	if err != nil {
 		panic(err)
 	}

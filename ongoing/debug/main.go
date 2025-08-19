@@ -18,20 +18,27 @@ package main
 
 import (
 	"context"
-	"eino_testing/ongoing"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"eino_testing/ongoing"
+
 	"github.com/cloudwego/eino-ext/devops"
+	"github.com/joho/godotenv"
 )
 
 func main() {
 	ctx := context.Background()
 
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	// Init eino devops server
-	err := devops.Init(ctx)
+	err = devops.Init(ctx)
 	if err != nil {
 		log.Printf("[eino dev] init failed, err=%v", err)
 		return
