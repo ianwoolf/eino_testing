@@ -3,11 +3,12 @@ module eino_testing
 go 1.24.6
 
 require (
-	github.com/cloudwego/eino v0.3.45
+	github.com/cloudwego/eino v0.3.51
 	github.com/cloudwego/eino-ext/components/document/transformer/splitter/markdown v0.0.0-20250624023530-68a1e4282a8e
 	github.com/cloudwego/eino-ext/components/embedding/ark v0.0.0-20250624023530-68a1e4282a8e
 	github.com/cloudwego/eino-ext/components/indexer/milvus v0.0.0-20250626134119-cf4f96ea0039
 	github.com/cloudwego/eino-ext/components/model/ark v0.1.13
+	github.com/cloudwego/eino-ext/components/model/openai v0.0.0-20250728034832-de7648551801
 	github.com/cloudwego/eino-ext/components/retriever/milvus v0.0.0-20250626134119-cf4f96ea0039
 	github.com/cloudwego/eino-ext/devops v0.1.7
 	github.com/google/uuid v1.6.0
@@ -20,11 +21,13 @@ require (
 	github.com/bytedance/sonic/loader v0.2.4 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cloudwego/base64x v0.1.5 // indirect
+	github.com/cloudwego/eino-ext/libs/acl/openai v0.0.0-20250626133421-3c142631c961 // indirect
 	github.com/cockroachdb/errors v1.9.1 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20211118104740-dabe8e521a4f // indirect
 	github.com/cockroachdb/redact v1.1.3 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
+	github.com/evanphx/json-patch v0.5.2 // indirect
 	github.com/getkin/kin-openapi v0.118.0 // indirect
 	github.com/getsentry/sentry-go v0.12.0 // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
@@ -44,6 +47,7 @@ require (
 	github.com/mailru/easyjson v0.9.0 // indirect
 	github.com/matoous/go-nanoid v1.5.1 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
+	github.com/meguminnnnnnnnn/go-openai v0.0.0-20250722145557-285a738ebcb9 // indirect
 	github.com/milvus-io/milvus-proto/go-api/v2 v2.4.10-0.20240819025435-512e3b98866a // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
@@ -53,7 +57,7 @@ require (
 	github.com/perimeterx/marshmallow v1.1.5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/rogpeppe/go-internal v1.13.1 // indirect
+	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/slongfield/pyfmt v0.0.0-20220222012616-ea85ff4c361f // indirect
 	github.com/tidwall/gjson v1.14.4 // indirect
