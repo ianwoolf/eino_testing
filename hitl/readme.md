@@ -207,6 +207,48 @@ Context: {
    └─ 继续 ToolsNode，之后回到 ChatModel
 ```
 
+## 安装
+
+### 安装必需软件
+
+    go version    # >=1.21
+    node --version # >=18.0
+    npm --version  # >=8.0
+
+### 配置环境变量
+
+    cd eino_testing/hitl/
+
+#### .env
+
+    cat > .env << 'EOF'
+    OPENAI_API_KEY=your_api_key_here
+    OPENAI_MODEL=gpt-4
+    OPENAI_BASE_URL=https://api.openai.com/v1
+    EOF
+
+### 安装依赖
+
+##### Go 依赖
+
+    go mod download
+
+国内镜像（如需要: `go env -w GOPROXY=https://goproxy.cn,direct`
+
+##### 前端依赖和构建
+
+    cd ui
+    npm install
+    npm run build
+    cd ..
+
+npm 镜像: `npm config set registry https://registry.npmmirror.com`
+
+### 运行
+
+    go run . --web --web-port 8080
+
+
 ## 使用示例
 
 ### 基础使用
