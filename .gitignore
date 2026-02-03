@@ -7,3 +7,4 @@ reAct/reAct
 
 hitl/checkpoints_data/*.json
 hitl/hitl
+hitl/ui/node_modules

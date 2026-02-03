@@ -12,6 +12,8 @@ import (
 	"github.com/cloudwego/eino/compose"
 	"github.com/cloudwego/eino/schema"
 	"github.com/joho/godotenv"
+
+	"eino_testing/hitl/server"
 )
 
 func main() {
@@ -25,6 +27,15 @@ func main() {
 
 	// Register universal state type
 	_ = compose.RegisterSerializableType[*UniversalState]("universal_state")
+
+	// Run the appropriate flow
+	if flags.web {
+		// Start web server
+		if err := runWebServer(flags); err != nil {
+			log.Fatal(err)
+		}
+		return
+	}
 
 	ctx := context.Background()
 
@@ -57,6 +68,9 @@ type cliFlags struct {
 	checkpointID     string
 	exitAfterConfirm bool
 	simulate         bool
+	web              bool
+	webPort          int
+	webDist          string
 }
 
 func parseFlags() cliFlags {
@@ -65,8 +79,15 @@ func parseFlags() cliFlags {
 	flag.StringVar(&f.checkpointID, "checkpoint-id", defaultCheckpoint, "checkpoint id to use")
 	flag.BoolVar(&f.exitAfterConfirm, "exit-after-confirm", false, "exit after saving confirmation overlay")
 	flag.BoolVar(&f.simulate, "simulate", false, "run in simulate mode (no external model calls)")
+	flag.BoolVar(&f.web, "web", false, "start web server mode")
+	flag.IntVar(&f.webPort, "web-port", 8080, "web server port")
+	flag.StringVar(&f.webDist, "web-dist", "./ui/dist", "frontend dist directory")
 	flag.Parse()
 	return f
+}
+
+func runWebServer(flags cliFlags) error {
+	return server.RunServer(flags.webPort, flags.baseDir, flags.webDist)
 }
 
 func runSimulateFlow(flags cliFlags) {
