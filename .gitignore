@@ -6,5 +6,6 @@ reAct/reAct
 .DS_Store
 
 hitl/checkpoints_data/*.json
-hitl/hitl
+hitl/hitl_server
+hitl/ui/dist
 hitl/ui/node_modules

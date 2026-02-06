@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"eino_testing/hitl/pkg/checkpoint"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -203,7 +205,7 @@ func (s *Server) HandleConfirm(c *gin.Context) {
 
 // HandleListCheckpoints lists all checkpoints
 func (s *Server) HandleListCheckpoints(c *gin.Context) {
-	checkpoints, err := listCheckpoints(s.baseDir)
+	checkpoints, err := checkpoint.ListCheckpoints(s.baseDir)
 	if err != nil {
 		log.Printf("[Handler] Failed to list checkpoints: %v", err)
 		c.JSON(http.StatusInternalServerError, APIError{
@@ -220,7 +222,7 @@ func (s *Server) HandleListCheckpoints(c *gin.Context) {
 func (s *Server) HandleDeleteCheckpoint(c *gin.Context) {
 	id := c.Param("id")
 
-	if err := deleteCheckpoint(s.baseDir, id); err != nil {
+	if err := checkpoint.DeleteCheckpoint(s.baseDir, id); err != nil {
 		log.Printf("[Handler] Failed to delete checkpoint: %v", err)
 		c.JSON(http.StatusInternalServerError, APIError{
 			Error:   "Failed to delete checkpoint",
@@ -281,60 +283,6 @@ func (s *Server) HandleLogs(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, logs)
-}
-
-// Helper functions
-
-func listCheckpoints(baseDir string) ([]CheckpointSummary, error) {
-	var checkpoints []CheckpointSummary
-
-	files, err := os.ReadDir(baseDir)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return checkpoints, nil
-		}
-		return nil, err
-	}
-
-	for _, file := range files {
-		if file.IsDir() {
-			continue
-		}
-
-		name := file.Name()
-		if filepath.Ext(name) == ".json" && !hasOverlaySuffix(name) {
-			info, _ := file.Info()
-			checkpointID := name[:len(name)-5] // Remove .json
-			checkpoints = append(checkpoints, CheckpointSummary{
-				ID:        checkpointID,
-				CreatedAt: info.ModTime(),
-				Size:      info.Size(),
-			})
-		}
-	}
-
-	return checkpoints, nil
-}
-
-func deleteCheckpoint(baseDir, id string) error {
-	// Delete checkpoint file
-	checkpointPath := filepath.Join(baseDir, id+".json")
-	if err := os.Remove(checkpointPath); err != nil && !os.IsNotExist(err) {
-		return fmt.Errorf("delete checkpoint file: %w", err)
-	}
-
-	// Delete overlay file if exists
-	overlayPath := filepath.Join(baseDir, id+overlaySuffix)
-	if err := os.Remove(overlayPath); err != nil && !os.IsNotExist(err) {
-		return fmt.Errorf("delete overlay file: %w", err)
-	}
-
-	return nil
-}
-
-func hasOverlaySuffix(name string) bool {
-	baseName := filepath.Base(name)
-	return len(baseName) > len(overlaySuffix) && baseName[len(baseName)-len(overlaySuffix):] == overlaySuffix
 }
 
 // HandleServeStatic serves the frontend static files

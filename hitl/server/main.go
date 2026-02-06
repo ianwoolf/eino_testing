@@ -155,7 +155,7 @@ func (s *Server) composeGraph(ctx context.Context) (compose.Runnable[map[string]
 		newChatTemplate(ctx),
 		newChatModel(ctx),
 		newToolsNode(ctx),
-		newMyStore(ctx, s.baseDir),
+		newCheckPointStore(ctx, s.baseDir),
 	)
 }
 
