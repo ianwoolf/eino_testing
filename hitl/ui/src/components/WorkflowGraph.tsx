@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { MessageResponse, ToolCallResponse } from '../api/types';
 import { apiClient } from '../api/client';
+import { Card, Button, Icons, NodeStatusIndicator } from './ui';
+import { theme } from '../theme';
 
 interface WorkflowGraphProps {
   currentNode: string;
@@ -140,19 +142,19 @@ export function WorkflowGraph({
 
   const isEdgeActive = useCallback((from: string, to: string): boolean => {
     const currentStatus = getNodeStatus();
-    
+
     if (currentStatus === 'completed' && to === 'END') {
       return true;
     }
-    
+
     if (status === 'interrupted' && from === 'ChatModel' && to === 'ToolsNode') {
       return true;
     }
-    
+
     if (status === 'interrupted' && from === 'ToolsNode') {
       return true;
     }
-    
+
     if (messageHistory && messageHistory.length > 0) {
       if (from === 'ChatTemplate' && to === 'ChatModel') {
         return true;
@@ -164,9 +166,9 @@ export function WorkflowGraph({
         return true;
       }
     }
-    
+
     return false;
-  }, [status, messageHistory]);
+  }, [status, messageHistory, getNodeStatus]);
 
   const hasLogs = (nodeId: string) => {
     if (nodeId === 'END') {
@@ -318,7 +320,7 @@ export function WorkflowGraph({
     if (toolCalls.length === 0) {
       return (
         <div className="text-center py-8">
-          <div className="text-slate-500 text-sm">No pending tool calls</div>
+          <div className={`text-slate-500 text-sm`}>No pending tool calls</div>
         </div>
       );
     }
@@ -335,17 +337,17 @@ export function WorkflowGraph({
           const isCurrentValid = isValid(index);
 
           return (
-            <div key={toolCall.id || index} className="bg-slate-700/50 border border-slate-600 rounded-xl p-5 hover:border-slate-500 transition-colors">
+            <Card key={toolCall.id || index} padding="lg">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
-                  <h5 className="text-white font-semibold">{toolCall.name}</h5>
+                  <h5 className={`text-white ${theme.fontWeight.semibold}`}>{toolCall.name}</h5>
                 </div>
-                <span className="text-xs text-slate-400 font-mono">ID: {toolCall.id?.substring(0, 8)}...</span>
+                <span className={`text-slate-500 text-xs font-mono`}>ID: {toolCall.id?.substring(0, 8)}...</span>
               </div>
 
               <div className="mb-4">
-                <label className="block text-slate-300 text-sm font-medium mb-2">
+                <label className={`block text-slate-300 text-sm ${theme.fontWeight.medium} mb-2`}>
                   {isCurrentlyEditing ? 'Edited Arguments:' : 'Arguments:'}
                 </label>
 
@@ -359,17 +361,13 @@ export function WorkflowGraph({
                     />
                     {!isCurrentValid && (
                       <p className="text-red-400 text-sm mt-2 flex items-center gap-2">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
+                        <Icons.Alert className="w-4 h-4" />
                         Invalid JSON format
                       </p>
                     )}
                     {hasChangesMade && isCurrentValid && (
                       <p className="text-amber-400 text-sm mt-2 flex items-center gap-2">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
+                        <Icons.Alert className="w-4 h-4" />
                         Modified from original
                       </p>
                     )}
@@ -381,9 +379,7 @@ export function WorkflowGraph({
                     </pre>
                     {hasChangesMade && (
                       <p className="text-amber-400 text-sm mt-2 flex items-center gap-2">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
+                        <Icons.Alert className="w-4 h-4" />
                         Modified (not yet submitted)
                       </p>
                     )}
@@ -395,42 +391,45 @@ export function WorkflowGraph({
                 <div className="flex gap-2">
                   {isCurrentlyEditing ? (
                     <>
-                      <button
+                      <Button
+                        variant="primary"
                         onClick={() => handleConfirm(index)}
                         disabled={isLoading || !isCurrentValid}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-slate-700 disabled:cursor-not-allowed font-medium transition-all shadow-lg hover:shadow-blue-500/25"
                       >
                         {isLoading ? 'Submitting...' : (hasChangesMade ? 'Submit Modified' : 'Confirm')}
-                      </button>
-                      <button
+                      </Button>
+                      <Button
+                        variant="secondary"
                         onClick={() => cancelEditing(index)}
                         disabled={isLoading}
-                        className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 disabled:bg-slate-700 font-medium transition-all"
                       >
                         Cancel
-                      </button>
+                      </Button>
                     </>
                   ) : (
                     <>
-                      <button
+                      <Button
+                        variant="success"
                         onClick={() => handleConfirm(index)}
                         disabled={isLoading}
-                        className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:bg-slate-700 disabled:cursor-not-allowed font-medium transition-all shadow-lg hover:shadow-emerald-500/25"
                       >
                         {isLoading ? 'Confirming...' : 'Confirm'}
-                      </button>
-                      <button
+                      </Button>
+                      <Button
+                        variant="warning"
                         onClick={() => startEditing(index)}
                         disabled={isLoading}
-                        className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:bg-slate-700 font-medium transition-all shadow-lg hover:shadow-amber-500/25"
                       >
-                        Edit
-                      </button>
+                        <div className="flex items-center gap-1">
+                          <Icons.Edit className="w-4 h-4" />
+                          Edit
+                        </div>
+                      </Button>
                     </>
                   )}
                 </div>
               )}
-            </div>
+            </Card>
           );
         })}
       </div>
@@ -441,22 +440,28 @@ export function WorkflowGraph({
     if (nodeId === 'END') {
       if (error) {
         return (
-          <div className="bg-red-900 border border-red-700 rounded p-4">
-            <h5 className="text-red-200 text-sm font-medium mb-2">Execution Error</h5>
+          <Card padding="md" className="border-red-700 bg-red-900/20">
+            <div className="flex items-center gap-2 mb-2">
+              <Icons.Alert className="text-red-400 w-5 h-5" />
+              <h5 className={`text-red-200 text-sm ${theme.fontWeight.medium}`}>Execution Error</h5>
+            </div>
             <p className="text-red-100">{error}</p>
-          </div>
+          </Card>
         );
       }
       if (result !== undefined) {
         return (
-          <div className="bg-green-900 border border-green-700 rounded p-4">
-            <h5 className="text-green-200 text-sm font-medium mb-2">Final Result</h5>
-            <p className="text-green-100">{result}</p>
-          </div>
+          <Card padding="md" className="border-emerald-700 bg-emerald-900/20">
+            <div className="flex items-center gap-2 mb-2">
+              <Icons.Check className="text-emerald-400 w-5 h-5" />
+              <h5 className={`text-emerald-200 text-sm ${theme.fontWeight.medium}`}>Final Result</h5>
+            </div>
+            <p className="text-emerald-100">{result}</p>
+          </Card>
         );
       }
       return (
-        <div className="text-gray-500 text-sm">
+        <div className={`text-slate-500 text-sm`}>
           {status === 'completed' ? 'Execution completed' : 'Execution not yet completed'}
         </div>
       );
@@ -468,18 +473,18 @@ export function WorkflowGraph({
 
     const logs = getNodeLogs(nodeId);
     if (logs.length === 0) {
-      return <p className="text-gray-500 text-sm">No logs available for this node</p>;
+      return <p className={`text-slate-500 text-sm`}>No logs available for this node</p>;
     }
 
     return (
       <div className="space-y-2">
         {logs.map((log, idx) => (
-          <div key={idx} className="bg-gray-800 rounded p-3">
-            <div className="text-gray-400 text-xs mb-2 font-mono">{log.key}</div>
-            <pre className="text-sm text-gray-300 overflow-x-auto font-mono">
+          <Card key={idx} padding="sm" className="bg-slate-900/50">
+            <div className={`text-slate-400 text-xs mb-2 font-mono`}>{log.key}</div>
+            <pre className={`text-sm text-slate-300 overflow-x-auto font-mono`}>
               {renderJSON(log.value)}
             </pre>
-          </div>
+          </Card>
         ))}
       </div>
     );
@@ -489,43 +494,52 @@ export function WorkflowGraph({
   const currentNodeLabel = nodes.find(n => n.id === currentNode)?.label || currentNode;
 
   return (
-    <div className="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-xl p-6 shadow-xl">
+    <Card padding="lg">
+      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <div className="w-1 h-6 bg-blue-500 rounded-full"></div>
-          <h3 className="text-white font-semibold text-lg tracking-tight">Workflow Graph</h3>
+          <h3 className={`text-white ${theme.fontWeight.semibold} text-lg tracking-tight`}>Workflow Graph</h3>
         </div>
         {selectedNode && !isEditing && (
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => setSelectedNode(null)}
-            className="text-sm text-slate-400 hover:text-white transition-colors px-3 py-1.5 hover:bg-slate-700 rounded-lg"
           >
-            Close Details ✕
-          </button>
+            <div className="flex items-center gap-1">
+              Close Details
+              <Icons.X className="w-4 h-4" />
+            </div>
+          </Button>
         )}
       </div>
 
+      {/* Node Error */}
       {nodeError && (
-        <div className="mb-4 bg-red-900 border border-red-700 text-red-100 px-4 py-2 rounded">
-          {nodeError}
-        </div>
+        <Card padding="md" className="mb-4 border-red-700 bg-red-900/30">
+          <div className="text-red-100 flex items-center gap-2">
+            <Icons.Alert className="w-5 h-5" />
+            {nodeError}
+          </div>
+        </Card>
       )}
 
+      {/* Node Details Panel */}
       {selectedNode && (
-        <div className="mb-6 bg-slate-900/80 backdrop-blur rounded-xl p-5 border border-slate-600 shadow-lg">
-          <h4 className="text-white font-medium mb-4 flex items-center gap-3">
-            <span className={`w-2.5 h-2.5 rounded-full ${
-              selectedNode === 'END'
-                ? status === 'completed' ? 'bg-emerald-500 shadow-lg shadow-emerald-500/50' : 'bg-slate-500'
-                : 'bg-blue-500 shadow-lg shadow-blue-500/50'
-            }`}></span>
+        <Card padding="lg" className="mb-6 bg-slate-900/80">
+          <h4 className={`${theme.text.primary} ${theme.fontWeight.medium} mb-4 flex items-center gap-3`}>
+            <NodeStatusIndicator status={nodeStatus} />
             {nodes.find(n => n.id === selectedNode)?.label}
-            {selectedNode === 'END' ? ' - Final Result' : selectedNode === 'ToolsNode' ? ' - Tool Calls' : ' - Execution Log'}
+            {selectedNode === 'END' && ' - Final Result'}
+            {selectedNode === 'ToolsNode' && ' - Tool Calls'}
+            {selectedNode !== 'END' && selectedNode !== 'ToolsNode' && ' - Execution Log'}
           </h4>
           {renderNodeDetails(selectedNode)}
-        </div>
+        </Card>
       )}
 
+      {/* SVG Graph */}
       <svg className="w-full" viewBox="0 0 750 200" style={{ maxHeight: selectedNode ? '150px' : '200px' }}>
         {edges.map((edge, idx) => {
           const isActive = isEdgeActive(edge.from, edge.to);
@@ -598,16 +612,14 @@ export function WorkflowGraph({
           return (
             <g key={node.id} onClick={() => !isEditing && setSelectedNode(node.id)}>
               {isSelected && !isEditing && (
-                <>
-                  <rect
-                    x={node.x - 4}
-                    y={node.y - 4}
-                    width="158"
-                    height="68"
-                    rx="12"
-                    className="fill-blue-500/20 stroke-blue-400 stroke-2"
-                  />
-                </>
+                <rect
+                  x={node.x - 4}
+                  y={node.y - 4}
+                  width="158"
+                  height="68"
+                  rx="12"
+                  className="fill-blue-500/20 stroke-blue-400 stroke-2"
+                />
               )}
 
               {isHighlighted && (
@@ -676,37 +688,18 @@ export function WorkflowGraph({
         })}
       </svg>
 
+      {/* Legend */}
       <div className="flex gap-5 mt-5 text-xs text-slate-400 flex-wrap border-t border-slate-700/50 pt-4">
-        <div className="flex items-center gap-2">
-          <div className="w-3.5 h-3.5 bg-slate-800 border-2 border-slate-600 rounded"></div>
-          <span>Pending</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3.5 h-3.5 bg-blue-600 border-2 border-blue-400 rounded shadow-lg shadow-blue-500/30"></div>
-          <span>Running</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3.5 h-3.5 bg-emerald-600 border-2 border-emerald-400 rounded shadow-lg shadow-emerald-500/30"></div>
-          <span>Completed</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3.5 h-3.5 bg-amber-500 border-2 border-amber-300 rounded shadow-lg shadow-amber-500/30"></div>
-          <span>Interrupted</span>
-        </div>
-        <div className="flex items-center gap-2 ml-4">
-          <div className="w-3.5 h-3.5 bg-blue-400 rounded-full shadow-lg shadow-blue-400/50"></div>
-          <span>Has Logs</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3.5 h-3.5 bg-emerald-500 rounded-full shadow-lg shadow-emerald-500/50"></div>
-          <span>Completed Node</span>
-        </div>
+        <NodeStatusIndicator status="pending" showLabel />
+        <NodeStatusIndicator status="running" showLabel />
+        <NodeStatusIndicator status="completed" showLabel />
+        <NodeStatusIndicator status="interrupted" showLabel />
         {status === 'pending' && (
           <div className="flex items-center gap-2 ml-4 text-amber-400 font-medium">
             <span>Pending at: {currentNodeLabel}</span>
           </div>
         )}
       </div>
-    </div>
+    </Card>
   );
 }
